@@ -2,12 +2,15 @@ import {
   Button,
   Dimensions,
   StyleSheet,
+  Switch,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
 import React, {useState} from 'react';
-import Orientation, {OrientationLocker} from 'react-native-orientation-locker';
+import {OrientationLocker} from 'react-native-orientation-locker';
+import Modal from 'react-native-modal';
+import {Slider} from '@miblanchard/react-native-slider';
 
 const {width, height} = Dimensions.get('window');
 
@@ -35,6 +38,12 @@ const Placar = ({navigation}) => {
   const [equipeA, setEquipeA] = useState(dados.EquipeA);
   const [equipeB, setEquipeB] = useState(dados.EquipeB);
   const [vantagem, setVantagem] = useState('');
+
+  const [isModalVisible, setModalVisible] = useState(false);
+
+  const toggleModal = () => {
+    setModalVisible(!isModalVisible);
+  };
 
   const atualizarPontosPlus = tipo => {
     if (tipo === 'A') {
@@ -138,10 +147,14 @@ const Placar = ({navigation}) => {
           </TouchableOpacity>
           <Text style={styles.textSet}>00000</Text>
         </View>
-        <View styles={{backgroundColor: 'blue', padding: 10}}>
+        <View style={styles.containerSeparador}>
           <TouchableOpacity
-            onPress={reset}
-            onLongPress={() => navigation.navigate('Inicio')}>
+            style={{
+              backgroundColor: '#999',
+              paddingHorizontal: 20,
+              paddingVertical: 10,
+            }}
+            onPress={toggleModal}>
             <Text styles={{color: 'white'}}>Menu</Text>
           </TouchableOpacity>
         </View>
@@ -171,6 +184,50 @@ const Placar = ({navigation}) => {
           <Text style={styles.textSet}>00000</Text>
         </View>
       </View>
+      <Modal isVisible={isModalVisible}>
+        <View style={{flex: 1, backgroundColor: '#ddddddc0'}}>
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+            }}>
+            <Button
+              title="Voltar Inicio"
+              onPress={() => navigation.navigate('Inicio')}
+            />
+            <Button title="Reiniciar Partida" onPress={reset} />
+            <Button title="Fechar Menu" onPress={toggleModal} />
+          </View>
+          <View>
+            <View style={{flexDirection: 'row'}}>
+              <View>
+                <Text>Modo de jogo:</Text>
+                <View style={{flexDirection: 'row'}}>
+                  <Text>Partida unica</Text>
+                  <Switch value={false} />
+                  <Text>Sets</Text>
+                </View>
+              </View>
+              <View>
+                <Text>Pontos por partida:</Text>
+                <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                  <Text style={{paddingRight: 20}}>Pontos</Text>
+                  <Slider
+                    containerStyle={{width: 200}}
+                    trackStyle={{color: 'red', width: 10, height: 10}}
+                    thumbStyle={{color: 'red'}}
+                    minimumValue={10}
+                    maximumValue={25}
+                    trackMarks={[15, 20]}
+                    value={25}
+                  />
+                </View>
+              </View>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -184,6 +241,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#000',
   },
+  containerSeparador: {
+    flexDirection: 'column',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
   containerPlacar: {
     flexDirection: 'column',
     justifyContent: 'center',
@@ -193,12 +256,12 @@ const styles = StyleSheet.create({
   textNome: {
     color: '#fff',
     fontFamily: 'LTBinaryNeueRound-Regular',
-    fontSize: Math.round(width * 0.06),
+    fontSize: width ? Math.round(width * 0.06) : 50,
     marginBottom: 10,
   },
   textNumero: {
     fontFamily: 'Digital Display',
-    fontSize: Math.round(width * 0.35),
+    fontSize: width ? Math.round(width * 0.35) : 300,
     color: '#fff',
     padding: 10,
     backgroundColor: '#000000c0',
@@ -206,7 +269,7 @@ const styles = StyleSheet.create({
   textSet: {
     color: '#fff',
     fontFamily: 'LTBinaryNeueRound-Regular',
-    fontSize: Math.round(width * 0.06),
+    fontSize: width ? Math.round(width * 0.06) : 50,
   },
   textSeparador: {},
 });

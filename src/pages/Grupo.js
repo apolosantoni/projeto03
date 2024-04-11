@@ -1,7 +1,8 @@
-import React, {useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {
   Alert,
   Button,
+  Dimensions,
   FlatList,
   ScrollView,
   StyleSheet,
@@ -15,6 +16,7 @@ import {OrientationLocker} from 'react-native-orientation-locker';
 
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
+const {width, height} = Dimensions.get('window');
 const InitialValue = [
   'nome 01*',
   'nome 02',
@@ -41,46 +43,102 @@ const InitialValue = [
 ];
 
 const Grupo = ({navigation}) => {
-  const [nomes, setNomes] = useState([]);
+  const [nomes, setNomes] = useState(InitialValue);
   const [newName, setNewName] = useState();
 
   const [nomesLista, setNomesLista] = useState(nomes);
   const [groups, setGroups] = useState(null);
+
   const [refreshing, setRefreshing] = useState(false);
+  const [modalNomeMenu, setModalNomeMenu] = useState(false);
+  const [modalNomeItem, setModalNomeItem] = useState(false);
+  const [modalGruposMenu, setModalGruposMenu] = useState(false);
+  const [modalGruposItem, setModalGruposItem] = useState(false);
+  const [modalConfiguracao, setModalConfiguracao] = useState(false);
 
-  const [isModalVisible, setModalVisible] = useState(false);
+  const [pontoA, setPontoA] = useState(0);
+  const [pontoB, setPontoB] = useState(0);
 
-  const toggleModal = () => {
-    setModalVisible(!isModalVisible);
+  const [listaInfo, setListaInfo] = useState(false);
+  const [offset, setOffset] = useState(0);
+  const scrollViewRef = useRef(null);
+  let screenIndex = 0;
+
+  const toggleNomeMenu = () => {
+    setModalNomeMenu(!modalNomeMenu);
+  };
+
+  const toggleNomeItem = () => {
+    setModalNomeItem(!modalNomeItem);
+  };
+
+  const toggleGrupoMenu = () => {
+    setModalGruposMenu(!modalGruposMenu);
+  };
+
+  const toggleGrupoItem = () => {
+    setModalGruposItem(!modalGruposItem);
+  };
+
+  const toggleConfiguracao = () => {
+    setModalConfiguracao(!modalConfiguracao);
   };
 
   function addNomes() {
     if (newName.trim() !== '') {
       if (newName.includes(',')) {
         const arrayNames = newName.split(',');
-        setNomes([...nomes, ...arrayNames]);
+        setNomesLista([...nomesLista, ...arrayNames]);
       } else {
-        setNomes([...nomes, newName.trim()]);
+        setNomesLista([...nomesLista, newName.trim()]);
       }
       setNewName('');
     }
+    //setNomesLista(...'', nomes);
   }
 
-  const removeName = nameToRemove => {
-    setNomes(nomes.filter(name => name !== nameToRemove));
+  const limparLista = () => {
+    setGroups(null);
+    setNomesLista('');
+  };
+
+  const salvarLista = () => {
+    setNomes(nomesLista);
+  };
+
+  const novaLista = () => {
+    Alert.alert(
+      'Nova Lista',
+      'Ira remover todos os nomes preenchidos e grupos',
+      [
+        {
+          text: 'Confirma',
+          onPress: () => {
+            setNomes('');
+            setGroups(null);
+            setNomesLista('');
+          },
+          style: 'default',
+        },
+        {
+          text: 'Cancelar',
+          style: 'cancel',
+        },
+      ],
+    );
+  };
+
+  const carregarLista = () => {
+    setNomesLista(nomes);
   };
 
   const removeNameLista = nameToRemove => {
     setNomesLista(nomesLista.filter(name => name !== nameToRemove));
   };
 
-  const refreshNomes = () => {
-    //Alert.alert('Acao', 'Era para funcionar');
-    setNomesLista(...'', nomes);
-  };
-
   const generateGroups = () => {
     if (groups == null) {
+      setNomes(nomesLista);
       const numGroups = Math.floor(nomesLista.length / 6);
       let shuffledNames = [...nomesLista].sort(() => Math.random() - 0.5);
       //let shuffledNames = [...nomesLista];
@@ -98,240 +156,582 @@ const Grupo = ({navigation}) => {
         setNomesLista('');
       }
       setGroups(newGroups);
+
+      scrollViewRef.current?.scrollTo({
+        x: 0 * screenIndex,
+        animated: true,
+      });
     } else {
       Alert.alert('Adicionar Grupo', 'Função não habilitada');
     }
   };
 
   const removeNameFromGroup = (groupIndex, nameRemove) => {
-    setRefreshing(true);
     let gFiltrado = groups.map(group => {
       let newGroup = group.filter(item => item !== nameRemove);
       return newGroup;
     });
     setGroups(gFiltrado);
     setNomesLista([...nomesLista, nameRemove]);
-    setRefreshing(false);
   };
 
   const limparGrupos = () => {
     setGroups(null);
     setNomesLista(nomes);
+    toggleGrupoMenu();
+    toPrevioustPage();
+  };
+
+  const refreshNomes = () => {
+    if (groups === null) {
+      setNomesLista(nomes);
+    }
+  };
+
+  const toNextPage = () => {
+    screenIndex += 1;
+    if (screenIndex <= 2) {
+      scrollViewRef.current?.scrollTo({
+        x: width * screenIndex,
+        animated: true,
+      });
+    }
+  };
+
+  const toPrevioustPage = () => {
+    console.log(screenIndex);
+    screenIndex -= 1;
+    if (screenIndex >= 0) {
+      scrollViewRef.current?.scrollTo({
+        x: width * screenIndex,
+        animated: true,
+      });
+    } else {
+      screenIndex = 1;
+    }
+  };
+
+  useEffect(() => {
+    refreshNomes();
+  }, [nomes]);
+
+  const ViewNomes = () => {
+    return (
+      <View style={styles.listaColunas}>
+        <View style={styles.searchContainer}>
+          <TextInput
+            style={styles.searchContainerTextInput}
+            placeholder="Enter com o(s) nome(s) separado por ','"
+            value={newName}
+            onChangeText={text => setNewName(text)}
+            onEndEditing={addNomes}
+            focusable={true}
+          />
+        </View>
+        <View style={styles.listaColunasHeader}>
+          <Text>Aguardando</Text>
+          <TouchableOpacity onPress={toggleNomeMenu}>
+            <Icon name="information-outline" size={32} color={'white'} />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={toNextPage}>
+            <Icon name="page-next-outline" size={32} color={'white'} />
+          </TouchableOpacity>
+        </View>
+        <ScrollView
+          style={{
+            marginBottom: 90,
+            paddingBottom: 20,
+            paddingVertical: 10,
+          }}>
+          <View
+            style={{
+              flexDirection: 'row',
+              flexWrap: 'wrap',
+              columnGap: 2,
+              rowGap: 5,
+              justifyContent: 'space-around',
+            }}>
+            {nomesLista &&
+              nomesLista.map &&
+              //Listagem dos nomes
+              nomesLista?.map((item, index) => (
+                <View
+                  key={index}
+                  style={[
+                    styles.listaColunasNomes,
+                    {
+                      backgroundColor: item.includes('*')
+                        ? 'plum'
+                        : 'mediumslateblue',
+                    },
+                  ]}>
+                  <Text style={styles.listaColunasNomesText}>{item}</Text>
+                  <TouchableOpacity
+                    style={{marginLeft: 10, right: 10}}
+                    onPress={() =>
+                      Alert.alert(
+                        'Remover Nome',
+                        `Deseja remover o nome : ${item}`,
+                        [
+                          {
+                            text: 'Sim',
+                            style: 'default',
+                            onPress: () =>
+                              setNomesLista(
+                                nomesLista.filter(name => name !== item),
+                              ),
+                          },
+                          {
+                            text: 'Não',
+                            style: 'cancel',
+                          },
+                        ],
+                      )
+                    }>
+                    <Icon
+                      name={
+                        item.includes('*') ? 'face-woman' : 'face-man-outline'
+                      }
+                      size={18}
+                      color={'white'}
+                    />
+                  </TouchableOpacity>
+                </View>
+              ))}
+          </View>
+        </ScrollView>
+
+        <View style={styles.listaColunasFooter}>
+          {!listaInfo ? (
+            <View style={styles.listaColunasFooterView}>
+              <Button
+                title="Sortear Grupos"
+                onPress={generateGroups}
+                disabled={nomesLista.length < 6 || groups !== null}
+              />
+              <TouchableOpacity
+                onPress={toNextPage}
+                style={{
+                  backgroundColor: 'dodgerblue',
+                  marginLeft: 20,
+                  paddingHorizontal: 2,
+                }}>
+                <Icon name="format-list-checks" size={32} color={'white'} />
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <View style={styles.listaColunasFooterView}>
+              <Text>
+                Nomes :<Text>10</Text>
+              </Text>
+              <Text>
+                Grupos : <Text>2</Text>
+              </Text>
+              <Text>
+                Homens:<Text>10</Text>
+              </Text>
+              <Text>
+                Mulheres: <Text>2</Text>
+              </Text>
+              <Text>Dados</Text>
+            </View>
+          )}
+        </View>
+      </View>
+    );
+  };
+
+  const ViewGrupo = () => {
+    return (
+      <View
+        style={[
+          styles.listaColunas,
+          {
+            backgroundColor: 'azure',
+          },
+        ]}>
+        <View style={styles.listaColunasHeader}>
+          <TouchableOpacity onPress={toPrevioustPage}>
+            <Icon name="page-previous-outline" size={32} color={'white'} />
+          </TouchableOpacity>
+          <Text>Grupos</Text>
+          <TouchableOpacity onPress={toggleGrupoMenu}>
+            <Icon name="format-list-checks" size={32} color={'white'} />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={toNextPage}>
+            <Icon name="page-next-outline" size={32} color={'white'} />
+          </TouchableOpacity>
+        </View>
+        <View>
+          <ScrollView style={{paddingVertical: 10, marginBottom: 60}}>
+            <View
+              style={{
+                flexDirection: 'row',
+                flexWrap: 'wrap',
+                columnGap: 2,
+                rowGap: 5,
+              }}>
+              {groups &&
+                groups.map &&
+                groups?.map((item, index) => (
+                  <View key={index} style={styles.grupoContainer}>
+                    <TouchableOpacity
+                      style={styles.grupoHeader}
+                      onPress={() => {}}>
+                      <Text style={styles.grupoHeaderText}>
+                        Grupo {index + 1}:
+                      </Text>
+                      <Icon
+                        style={{paddingLeft: 10}}
+                        name="account-edit"
+                        size={22}
+                        color={'black'}
+                      />
+                    </TouchableOpacity>
+                    {item?.map((name, nameIndex) => (
+                      <View
+                        style={[
+                          styles.grupoItem,
+                          {
+                            backgroundColor: name.includes('*')
+                              ? 'plum'
+                              : 'mediumslateblue',
+                          },
+                        ]}
+                        key={nameIndex}>
+                        <Text style={styles.grupoItemNomes}>{name}</Text>
+                        <TouchableOpacity
+                          onPress={
+                            () => {} /*removeNameFromGroup(index, name)*/
+                          }>
+                          <Icon
+                            style={{paddingLeft: 10}}
+                            name={
+                              name.includes('*')
+                                ? 'face-woman'
+                                : 'face-man-outline'
+                            }
+                            size={18}
+                            color={'black'}
+                          />
+                        </TouchableOpacity>
+                      </View>
+                    ))}
+                  </View>
+                ))}
+            </View>
+          </ScrollView>
+        </View>
+      </View>
+    );
+  };
+
+  const DisplayPlacar = ({nameEquipe, ponto = 0, pontoPlus, pontoMinus}) => {
+    return (
+      <View
+        style={{
+          flexDirection: 'column',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+        }}>
+        <View>
+          <Text style={{color: 'white', fontSize: 50, lineHeight: 60}}>
+            {nameEquipe}
+          </Text>
+        </View>
+        <View>
+          <TouchableOpacity onPress={pontoPlus} onLongPress={pontoMinus}>
+            <Text
+              style={{
+                color: '#232323',
+                fontSize: 220,
+                lineHeight: 220,
+                fontFamily: 'Digital Display',
+                position: 'absolute',
+              }}>
+              00
+            </Text>
+            <Text
+              style={{
+                color: 'white',
+                fontSize: 220,
+                lineHeight: 220,
+                fontFamily: 'Digital Display',
+              }}>
+              {ponto < 10 ? ' ' + ponto : ponto}
+            </Text>
+          </TouchableOpacity>
+        </View>
+        <View>
+          <Text style={{color: 'white', fontSize: 30, lineHeight: 30}}>
+            X-X-X
+          </Text>
+        </View>
+      </View>
+    );
+  };
+
+  const ViewPlacar = () => {
+    return (
+      <View
+        style={[
+          styles.listaColunasPlacar,
+          {
+            backgroundColor: 'black',
+          },
+        ]}>
+        <View style={styles.listaColunasHeaderPlacar}>
+          <TouchableOpacity onPress={toPrevioustPage}>
+            <Icon name="page-previous-outline" size={32} color={'white'} />
+          </TouchableOpacity>
+          <Text style={{color: 'white'}}>Placar</Text>
+          <TouchableOpacity onPress={toggleGrupoMenu}>
+            <Icon name="format-list-checks" size={32} color={'white'} />
+          </TouchableOpacity>
+        </View>
+        <View
+          style={{
+            flexDirection: 'row',
+            justifyContent: 'space-around',
+            alignItems: 'center',
+          }}>
+          <DisplayPlacar
+            nameEquipe={'Equipe A'}
+            ponto={pontoA}
+            pontoPlus={() => setPontoA(pontoA + 1)}
+            pontoMinus={() => setPontoA(pontoA - 1)}
+          />
+          <DisplayPlacar
+            nameEquipe={'Equipe B'}
+            ponto={pontoB}
+            pontoPlus={() => setPontoB(pontoB + 1)}
+            pontoMinus={() => setPontoB(pontoB - 1)}
+          />
+        </View>
+      </View>
+    );
+  };
+
+  const ModalNomes = () => {
+    return (
+      <Modal
+        isVisible={modalNomeMenu}
+        animationIn="slideInUp"
+        animationOut="slideOutDown">
+        <View
+          style={{
+            backgroundColor: '#000000c0',
+          }}>
+          <View
+            style={{
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              paddingHorizontal: 5,
+            }}>
+            <Text
+              style={{
+                color: 'white',
+                fontSize: 20,
+                lineHeight: 40,
+                fontWeight: 'bold',
+              }}>
+              Opções lista nomes
+            </Text>
+            <TouchableOpacity onPress={toggleNomeMenu}>
+              <Icon name="close-circle-outline" size={30} color="white" />
+            </TouchableOpacity>
+          </View>
+          <View
+            style={{
+              backgroundColor: 'white',
+              paddingVertical: 30,
+              rowGap: 10,
+              justifyContent: 'center',
+              paddingHorizontal: 20,
+            }}>
+            <View>
+              <View
+                style={{
+                  width: '100%',
+                  backgroundColor: 'dodgerblue',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                }}>
+                <Text
+                  style={{
+                    color: 'white',
+                    fontWeight: '600',
+                    paddingVertical: 5,
+                  }}>
+                  Dados
+                </Text>
+              </View>
+              <View
+                style={{flexDirection: 'row', justifyContent: 'space-between'}}>
+                <View
+                  style={{
+                    width: 120,
+                  }}>
+                  <View
+                    style={{
+                      justifyContent: 'space-between',
+                      flexDirection: 'row',
+                    }}>
+                    <Text>Total nomes :</Text>
+                    <Text>{nomesLista.length}</Text>
+                  </View>
+                  <View
+                    style={{
+                      justifyContent: 'space-between',
+                      flexDirection: 'row',
+                    }}>
+                    <Text>Total grupos :</Text>
+                    <Text>{Math.floor(nomesLista.length / 6)}</Text>
+                  </View>
+                  <View
+                    style={{
+                      justifyContent: 'space-between',
+                      flexDirection: 'row',
+                    }}>
+                    <Text>Aguardando : </Text>
+                    <Text>{Math.floor(nomesLista.length % 6)}</Text>
+                  </View>
+                </View>
+                <View style={{width: 120}}>
+                  <View
+                    style={{
+                      justifyContent: 'space-between',
+                      flexDirection: 'row',
+                    }}>
+                    <Text>Homens :</Text>
+                    <Text>
+                      {nomesLista !== null &&
+                      nomesLista.filter &&
+                      nomesLista?.filter(
+                        nomesLista => !nomesLista.includes('*'),
+                      ).length >= 1
+                        ? nomesLista?.filter(
+                            nomesLista => !nomesLista.includes('*'),
+                          ).length
+                        : 0}
+                    </Text>
+                  </View>
+                  <View
+                    style={{
+                      justifyContent: 'space-between',
+                      flexDirection: 'row',
+                    }}>
+                    <Text>Mulheres :</Text>
+                    <Text>
+                      {nomesLista !== null &&
+                      nomesLista.filter &&
+                      nomesLista?.filter(nomesLista => nomesLista.includes('*'))
+                        .length >= 1
+                        ? nomesLista?.filter(nomesLista =>
+                            nomesLista.includes('*'),
+                          ).length
+                        : 0}
+                    </Text>
+                  </View>
+                </View>
+              </View>
+            </View>
+            <Button
+              title="Nova lista"
+              onPress={novaLista}
+              disabled={nomesLista.length <= 0}
+            />
+            <Button
+              title="Limpar nomes"
+              onPress={limparLista}
+              disabled={nomesLista.length <= 0}
+            />
+            <Button
+              title="Salvar esta lista"
+              onPress={salvarLista}
+              disabled={nomesLista.length <= 0}
+            />
+            <Button
+              title="Carregar lista"
+              onPress={carregarLista}
+              disabled={nomes.length <= 0}
+            />
+            <Button
+              title="Gravar lista"
+              onPress={() => {}}
+              disabled={nomesLista.length <= 0}
+            />
+            <Button title="Carregar lista antigas salvas" onPress={() => {}} />
+          </View>
+        </View>
+      </Modal>
+    );
+  };
+
+  const ModalGrupos = () => {
+    return (
+      <Modal
+        isVisible={modalGruposMenu}
+        animationIn="slideInUp"
+        animationOut="slideOutDown">
+        <View
+          style={{
+            backgroundColor: '#000000c0',
+          }}>
+          <View
+            style={{
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              paddingHorizontal: 20,
+            }}>
+            <Text
+              style={{
+                color: 'white',
+                fontSize: 20,
+                lineHeight: 40,
+                fontWeight: 'bold',
+              }}>
+              Opções Grupos
+            </Text>
+            <TouchableOpacity onPress={toggleGrupoMenu}>
+              <Icon name="close-circle-outline" size={30} color="white" />
+            </TouchableOpacity>
+          </View>
+          <View
+            style={{
+              backgroundColor: 'white',
+              paddingVertical: 30,
+              rowGap: 40,
+              justifyContent: 'center',
+              paddingHorizontal: 20,
+            }}>
+            <Button title="Limpar Grupos" onPress={limparGrupos} />
+            <Button title="Sortear Novamente" onPress={toggleGrupoMenu} />
+          </View>
+        </View>
+      </Modal>
+    );
   };
 
   return (
     <View styles={styles.mainContainer}>
       <OrientationLocker orientation="PORTRAIT" />
-      <View style={styles.searchContainer}>
-        <TextInput
-          style={styles.searchContainerTextInput}
-          placeholder="Enter com o(s) nome(s) separado por ','"
-          value={newName}
-          onChangeText={text => setNewName(text)}
-          onEndEditing={addNomes}
-          focusable={true}
-        />
-        <TouchableOpacity
-          onPress={addNomes}
-          style={styles.searchContainerButton}>
-          <Icon name="account-plus" size={20} color={'white'} />
-        </TouchableOpacity>
+      <View style={styles.listasContainer}>
+        <ScrollView
+          scrollEnabled={false}
+          ref={scrollViewRef}
+          horizontal={true}
+          contentOffset={{x: offset, y: 0}}
+          oncon>
+          <ViewNomes />
+          <ViewGrupo />
+          <ViewPlacar />
+        </ScrollView>
       </View>
-      <View style={styles.headerContainer}>
-        <Text style={{paddingLeft: 50, fontWeight: 800, color: 'white'}}>
-          Aguardando por grupo(s)
-        </Text>
-        {nomes.length > nomesLista.length && (
-          <TouchableOpacity style={{paddingLeft: 10}} onPress={refreshNomes}>
-            <Icon name="account-convert" size={22} color={'white'} />
-          </TouchableOpacity>
-        )}
-      </View>
-      <ScrollView
-        style={styles.containerAguardando}
-        contentContainerStyle={styles.containerScrollAguardando}>
-        {nomesLista &&
-          nomesLista.map &&
-          //Listagem dos nomes
-          nomesLista?.map((item, index) => (
-            <TouchableOpacity
-              key={index}
-              onPress={
-                () => Alert.alert('Ação', item) /*removeNameLista(item)*/
-              }>
-              <View style={styles.nomeContainer}>
-                <Text style={{color: 'black'}}>{item}</Text>
-              </View>
-            </TouchableOpacity>
-          ))}
-      </ScrollView>
-      <View style={[styles.dadosContainer, {flexWrap: 'wrap'}]}>
-        <Text>
-          Total Names :
-          <Text style={{color: 'black'}}>
-            {nomes.length ? nomes.length : 0}
-          </Text>
-        </Text>
-        <Text>
-          Total Grupos :
-          <Text style={{color: 'black'}}>
-            {Math.floor(nomes.length / 6) ? Math.floor(nomes.length / 6) : 0}
-          </Text>
-        </Text>
-        <Text>
-          Aguardando :
-          <Text style={{color: 'black'}}>
-            {Math.round(nomes.length / 6) >= 1
-              ? Math.round(nomes.length % 6)
-              : 0}
-          </Text>
-        </Text>
-      </View>
-      <View style={styles.dadosContainer}>
-        <Text>
-          Homens :
-          <Text style={{color: 'black'}}>
-            {nomes?.filter(nome => !nome.includes('*')).length >= 1
-              ? nomes?.filter(nome => !nome.includes('*')).length
-              : 0}
-          </Text>
-        </Text>
-        <Text>
-          Mulheres :
-          <Text style={{color: 'black'}}>
-            {nomes?.filter(nome => nome.includes('*')).length >= 1
-              ? nomes?.filter(nome => nome.includes('*')).length
-              : 0}
-          </Text>
-        </Text>
-      </View>
-      <View style={styles.containerControlGroup}>
-        <TouchableOpacity
-          style={[
-            styles.containerControlGroupButton,
-            {opacity: Math.floor(nomes.length / 6) == 0 ? 0.3 : 1},
-          ]}
-          disabled={Math.floor(nomes.length / 6) == 0}
-          onPress={generateGroups}>
-          <Text
-            style={{
-              color: 'white',
-              paddingHorizontal: 5,
-            }}>
-            {groups === null ? 'Sortear Grupos' : 'Adicionar Grupo'}
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={limparGrupos}
-          style={[
-            styles.containerControlGroupButton,
-            {
-              opacity: Math.floor(nomes.length / 6) == 0 ? 0.3 : 1,
-            },
-          ]}
-          disabled={groups == null}>
-          <Text
-            style={{
-              color: 'white',
-              paddingHorizontal: 5,
-            }}>
-            Limpar Grupo
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[
-            styles.containerControlGroupButton,
-            {
-              opacity: Math.floor(nomes.length / 6) == 0 ? 0.3 : 1,
-            },
-          ]}
-          disabled={Math.floor(nomes.length / 6) == 0}>
-          <Text
-            style={{
-              color: 'white',
-              paddingHorizontal: 5,
-            }}>
-            Substituir nomes
-          </Text>
-        </TouchableOpacity>
-      </View>
-      <View style={styles.headerContainer}>
-        <TouchableOpacity onPress={toggleModal}>
-          <Text style={{fontWeight: 800, color: 'black'}}>Grupos</Text>
-        </TouchableOpacity>
-      </View>
-      <View style={{}}>
-        <FlatList
-          contentContainerStyle={{
-            paddingVertical: 10,
-            paddingHorizontal: 5,
-          }}
-          data={groups}
-          numColumns={2}
-          alwaysBounceVertical={true}
-          keyExtractor={(item, index) => index.toString()}
-          columnWrapperStyle={{flexWrap: 'wrap'}}
-          renderItem={({item, index}) => (
-            <View style={styles.grupoContainer}>
-              <TouchableOpacity
-                style={styles.grupoHeader}
-                onPress={() =>
-                  //Alert.alert('Ação', 'Clicou no Grupo ' + `${index + 1}`)
-                  navigation.navigate('GrupoDetail', {
-                    grupo: groups[index],
-                    grupoIndex: index,
-                  })
-                }>
-                <Text style={styles.grupoTituloText}>Grupo {index + 1}:</Text>
-                <Icon
-                  style={{paddingLeft: 10}}
-                  name="account-edit"
-                  size={18}
-                  color={'black'}
-                />
-              </TouchableOpacity>
-              {item?.map((name, nameIndex) => (
-                <View style={styles.grupoItem} key={nameIndex}>
-                  <Text style={styles.grupoItemNomes}>{name}</Text>
-                  <TouchableOpacity
-                    onPress={() => {} /*removeNameFromGroup(index, name)*/}>
-                    <Icon
-                      style={{paddingLeft: 10}}
-                      name={
-                        name.includes('*') ? 'face-woman' : 'face-man-outline'
-                      }
-                      size={18}
-                      color={'black'}
-                    />
-                  </TouchableOpacity>
-                </View>
-              ))}
-            </View>
-          )}
-        />
-      </View>
-      {/*Modal */}
-      <Modal
-        isVisible={isModalVisible}
-        animationIn="slideInRight"
-        animationOut="slideOutRight"
-        deviceHeight={500}>
-        <View style={{flex: 1}}>
-          <Text
-            style={{
-              color: 'white',
-              fontSize: 42,
-              lineHeight: 84,
-              fontWeight: 'bold',
-              textAlign: 'center',
-              backgroundColor: '#000000c0',
-            }}>
-            I am the modal content!
-          </Text>
-          <TextInput value="" style={{width: 200}}></TextInput>
-          <Button title="Hide modal" onPress={toggleModal} />
-        </View>
-      </Modal>
+      <ModalNomes />
+      <ModalGrupos />
     </View>
   );
 };
@@ -343,7 +743,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'lightgoldenrodyellow',
   },
   searchContainer: {
     flexDirection: 'row',
@@ -353,102 +752,114 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   searchContainerTextInput: {
-    width: '85%',
+    width: '100%',
     height: 40,
     color: 'black',
     backgroundColor: 'white',
     borderRadius: 15,
     marginRight: 10,
+    paddingLeft: 10,
   },
   searchContainerButton: {
-    backgroundColor: 'mediumslateblue',
+    backgroundColor: 'white',
     width: 32,
     height: 32,
     borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  dadosContainer: {
-    flexDirection: 'row',
-    marginHorizontal: 10,
-    marginVertical: 5,
-    justifyContent: 'space-around',
-  },
-  headerContainer: {
-    width: '100%',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 10,
-    backgroundColor: 'mediumslateblue',
-  },
-  containerScrollAguardando: {
-    flexDirection: 'row',
-    paddingHorizontal: 20,
-    columnGap: 10,
-    rowGap: 5,
-    flexWrap: 'wrap',
-    paddingBottom: 20,
-  },
-  containerAguardando: {
-    width: '100%',
-    height: 110,
-    paddingVertical: 10,
-    backgroundColor: 'gray',
-  },
-  nomeContainer: {
-    backgroundColor: 'mediumpurple',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    borderRadius: 10,
-    paddingVertical: 10,
-    paddingHorizontal: 10,
-  },
-  containerControlGroup: {
-    flexDirection: 'row',
-    marginVertical: 5,
-    marginHorizontal: 10,
-    height: 50,
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  containerControlGroupButton: {
-    backgroundColor: 'mediumslateblue',
-    borderRadius: 10,
-    paddingVertical: 10,
-  },
-  grupoContainer: {
-    flex: 0.5,
-    justifyContent: 'flex-start',
-    backgroundColor: '#fff',
-    borderWidth: 2,
-    borderRadius: 20,
-    marginTop: 10,
     marginLeft: 10,
   },
-  grupoHeader: {
-    width: '100%',
-    backgroundColor: 'mediumslateblue',
-    borderTopLeftRadius: 18,
-    borderTopRightRadius: 18,
-    borderBottomWidth: 2,
-    justifyContent: 'space-between',
+  listasContainer: {
+    height: Math.round(height - 20),
+    backgroundColor: 'papayawhip',
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    flexGrow: 1,
+  },
+  listaColunas: {
+    width: Math.round(width),
+    height: Math.round(height - 20),
+    backgroundColor: 'papayawhip',
+    flexDirection: 'column',
+  },
+  listaColunasPlacar: {
+    top: 95,
+    left: -116,
+    width: Math.round(height),
+    height: Math.round(width),
+    backgroundColor: 'papayawhip',
+    flexDirection: 'column',
+    transform: [{rotate: '90deg'}],
+  },
+  listaColunasHeader: {
+    backgroundColor: 'navajowhite',
+    height: 60,
+    justifyContent: 'center',
     alignItems: 'center',
     flexDirection: 'row',
-    paddingHorizontal: 10,
-    height: 50,
+    gap: 10,
   },
-  grupoTituloText: {fontSize: 22, color: 'black'},
+  listaColunasHeaderPlacar: {
+    backgroundColor: 'black',
+    borderBottomWidth: 2,
+    borderBottomColor: 'white',
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: 10,
+  },
+  listaColunasNomes: {
+    height: 30,
+    width: '46%',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 5,
+  },
+  listaColunasNomesText: {
+    left: 10,
+    fontSize: 16,
+    color: 'white',
+  },
+  listaColunasNomesIcon: {},
+  listaColunasNomesButton: {},
+  listaColunasNomesButtonIcon: {},
+  listaColunasFooter: {
+    position: 'absolute',
+    backgroundColor: 'navajowhite',
+    width: '100%',
+    height: 80,
+    justifyContent: 'center',
+    alignItems: 'center',
+    bottom: 0,
+  },
+  listaColunasFooterView: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+  },
+  grupoContainer: {
+    width: '40%',
+    marginHorizontal: 10,
+    marginBottom: 20,
+    borderWidth: 2,
+  },
+  grupoHeader: {
+    backgroundColor: 'peru',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    height: 30,
+    paddingHorizontal: 5,
+  },
+  grupoHeaderText: {fontSize: 22, color: 'black'},
   grupoItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    backgroundColor: 'white',
     paddingHorizontal: 10,
-    fontSize: 14,
-  },
-  grupoItemNomes: {
-    paddingHorizontal: 5,
-    fontSize: 16,
+    paddingVertical: 5,
   },
 });

@@ -1,6 +1,36 @@
 import React, {createContext, useState} from 'react';
 
 const MyContext = createContext({});
+const Config = {
+  placarConfigVolei: {
+    pontosSet: 25,
+    modoJogo: 0, //0 = amador 1 set, 1 = normal
+    pontosSetDesempate: 15, // ultimo set
+    diferencaVitoria: 2,
+    numSets: 1,
+    sets: [0, 0, 0, 0, 0],
+    partida: [
+      {
+        nome: 'Equipe A',
+        pontos: 0,
+        vantagem: 0,
+      },
+      {
+        nome: 'Equipe B',
+        pontos: 0,
+        vantagem: 0,
+      },
+    ],
+  },
+  futebolConfig: {},
+  basqueteConfig: {},
+  listaCongig: {
+    nomes: [],
+    aguardando: [],
+    grupos: {},
+  },
+};
+
 const InitialValue = [
   'nome 01*',
   'nome 02',

@@ -37,3 +37,9 @@ Let Metro Bundler run in its _own_ terminal. Open a _new_ terminal from the _roo
 # Troubleshooting
 
 # Learn More
+
+keytool -genkeypair -v -storetype PKCS12 -keystore my-upload-key.keystore -alias my-key-alias -keyalg RSA -keysize 2048 -validity 10000
+npx react-native build-android --mode=release
+
+cd android //criar apk
+gradlew assembleRelease
