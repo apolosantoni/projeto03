@@ -48,7 +48,7 @@ const Grupo = ({navigation}) => {
   const [newName, setNewName] = useState();
 
   const [nomesLista, setNomesLista] = useState(nomes);
-  const [groups, setGroups] = useState(null);
+  const [groups, setGroups] = useState([]);
 
   const [refreshing, setRefreshing] = useState(false);
   const [modalNomeMenu, setModalNomeMenu] = useState(false);
@@ -137,6 +137,11 @@ const Grupo = ({navigation}) => {
     setNomesLista(nomesLista.filter(name => name !== nameToRemove));
   };
 
+  const generateGroupsManual = () => {
+    setGroups([...groups, []]);
+    console.log(groups);
+  };
+
   const generateGroups = () => {
     if (groups == null) {
       setNomes(nomesLista);
@@ -149,7 +154,7 @@ const Grupo = ({navigation}) => {
       for (let i = 0; i < numGroups; i++) {
         const group = shuffledNames.slice(i * 6, (i + 1) * 6);
         newGroups.push(group);
-        console.log('group ' + i + ': ' + group);
+        //console.log('group ' + i + ': ' + group);
       }
       if (shuffledNames.length > 0) {
         setNomesLista(shuffledNames.slice(numGroups * 6, (numGroups + 1) * 6));
@@ -214,7 +219,7 @@ const Grupo = ({navigation}) => {
 
   useEffect(() => {
     refreshNomes();
-  }, [nomes]);
+  }, [nomes, groups]);
 
   const ViewNomes = () => {
     return (
@@ -786,7 +791,11 @@ const Grupo = ({navigation}) => {
               justifyContent: 'center',
               paddingHorizontal: 20,
             }}>
-            <Button title="Limpar Grupos" onPress={limparGrupos} />
+            <Button title="Excluir todos grupos" onPress={limparGrupos} />
+            <Button
+              title="Criar grupo manualmente"
+              onPress={generateGroupsManual}
+            />
             <Button title="Sortear Novamente" onPress={toggleGrupoMenu} />
           </View>
         </View>
