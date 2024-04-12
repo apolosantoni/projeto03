@@ -6,6 +6,7 @@ import {
   FlatList,
   ScrollView,
   StyleSheet,
+  Switch,
   Text,
   TextInput,
   TouchableOpacity,
@@ -310,7 +311,7 @@ const Grupo = ({navigation}) => {
                 disabled={nomesLista.length < 6 || groups !== null}
               />
               <TouchableOpacity
-                onPress={toNextPage}
+                onPress={toggleConfiguracao}
                 style={{
                   backgroundColor: 'dodgerblue',
                   marginLeft: 20,
@@ -509,6 +510,84 @@ const Grupo = ({navigation}) => {
           />
         </View>
       </View>
+    );
+  };
+
+  const ModalConfiguracao = () => {
+    return (
+      <Modal
+        isVisible={modalConfiguracao}
+        animationIn="slideInUp"
+        animationOut="slideOutDown">
+        <View
+          style={{
+            backgroundColor: '#000000c0',
+          }}>
+          <View
+            style={{
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              paddingHorizontal: 5,
+            }}>
+            <Text
+              style={{
+                color: 'white',
+                fontSize: 20,
+                lineHeight: 40,
+                fontWeight: 'bold',
+              }}>
+              Opções geracao dos grupos
+            </Text>
+            <TouchableOpacity onPress={toggleConfiguracao}>
+              <Icon name="close-circle-outline" size={30} color="white" />
+            </TouchableOpacity>
+          </View>
+          <View style={{backgroundColor: 'white', padding: 10}}>
+            <View
+              style={{
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+              }}>
+              <Text>Nomes obrigatorios por grupo :</Text>
+              <Switch value={false} />
+            </View>
+            <View
+              style={{
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+              }}>
+              <Text>Nomes obrigatorios por grupo :</Text>
+              <TextInput
+                value="1"
+                placeholder="1"
+                disabled={true}
+                editable={false}
+              />
+            </View>
+            <View
+              style={{
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+              }}>
+              <Text>Numero de nomes por grupo : </Text>
+              <TextInput value="6" placeholder="6" />
+            </View>
+            <View
+              style={{
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+              }}>
+              <Text>Sortear grupos de forma aleatoria ?</Text>
+              <Switch value={true} />
+            </View>
+          </View>
+        </View>
+      </Modal>
     );
   };
 
@@ -730,6 +809,7 @@ const Grupo = ({navigation}) => {
           <ViewPlacar />
         </ScrollView>
       </View>
+      <ModalConfiguracao />
       <ModalNomes />
       <ModalGrupos />
     </View>

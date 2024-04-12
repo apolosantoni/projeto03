@@ -27,7 +27,7 @@ const Config = {
   listaCongig: {
     nomes: [],
     aguardando: [],
-    grupos: {},
+    grupos: [],
   },
 };
 
