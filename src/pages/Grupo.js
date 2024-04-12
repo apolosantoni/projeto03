@@ -16,6 +16,7 @@ import Modal from 'react-native-modal';
 import {OrientationLocker} from 'react-native-orientation-locker';
 
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import IconMaterial from 'react-native-vector-icons/MaterialIcons';
 
 const {width, height} = Dimensions.get('window');
 const InitialValue = [
@@ -162,11 +163,7 @@ const Grupo = ({navigation}) => {
         setNomesLista('');
       }
       setGroups(newGroups);
-
-      scrollViewRef.current?.scrollTo({
-        x: 0 * screenIndex,
-        animated: true,
-      });
+      toPage(1);
     } else {
       Alert.alert('Adicionar Grupo', 'Função não habilitada');
     }
@@ -182,10 +179,10 @@ const Grupo = ({navigation}) => {
   };
 
   const limparGrupos = () => {
-    setGroups(null);
+    setGroups([]);
     setNomesLista(nomes);
     toggleGrupoMenu();
-    toPrevioustPage();
+    toPage(0);
   };
 
   const refreshNomes = () => {
@@ -217,6 +214,13 @@ const Grupo = ({navigation}) => {
     }
   };
 
+  const toPage = screenIndex => {
+    scrollViewRef.current?.scrollTo({
+      x: width * screenIndex,
+      animated: true,
+    });
+  };
+
   useEffect(() => {
     refreshNomes();
   }, [nomes, groups]);
@@ -224,25 +228,44 @@ const Grupo = ({navigation}) => {
   const ViewNomes = () => {
     return (
       <View style={styles.listaColunas}>
-        <View style={styles.searchContainer}>
-          <TextInput
-            style={styles.searchContainerTextInput}
-            placeholder="Enter com o(s) nome(s) separado por ','"
-            value={newName}
-            onChangeText={text => setNewName(text)}
-            onEndEditing={addNomes}
-            focusable={true}
-          />
+        <View
+          style={[
+            styles.listaColunasHeader,
+            {flexDirection: 'column', height: 100},
+          ]}>
+          <View style={styles.searchContainer}>
+            <TextInput
+              style={styles.searchContainerTextInput}
+              placeholder="Enter com o(s) nome(s) separado por ','"
+              value={newName}
+              onChangeText={text => setNewName(text)}
+              onEndEditing={addNomes}
+              focusable={true}
+            />
+          </View>
+          <View
+            style={{
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              width: '90%',
+            }}>
+            <Text style={{fontWeight: '500', fontSize: 18}}>Aguardando</Text>
+            <TouchableOpacity
+              onPress={toggleNomeMenu}
+              style={{
+                backgroundColor: 'dodgerblue',
+                marginLeft: 20,
+                paddingHorizontal: 2,
+              }}>
+              <IconMaterial name="settings" size={32} color={'white'} />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => toPage(1)}>
+              <Icon name="page-next-outline" size={32} color={'black'} />
+            </TouchableOpacity>
+          </View>
         </View>
-        <View style={styles.listaColunasHeader}>
-          <Text>Aguardando</Text>
-          <TouchableOpacity onPress={toggleNomeMenu}>
-            <Icon name="information-outline" size={32} color={'white'} />
-          </TouchableOpacity>
-          <TouchableOpacity onPress={toNextPage}>
-            <Icon name="page-next-outline" size={32} color={'white'} />
-          </TouchableOpacity>
-        </View>
+
         <ScrollView
           style={{
             marginBottom: 90,
@@ -308,40 +331,22 @@ const Grupo = ({navigation}) => {
         </ScrollView>
 
         <View style={styles.listaColunasFooter}>
-          {!listaInfo ? (
-            <View style={styles.listaColunasFooterView}>
-              <Button
-                title="Sortear Grupos"
-                onPress={generateGroups}
-                disabled={nomesLista.length < 6 || groups !== null}
-              />
-              <TouchableOpacity
-                onPress={toggleConfiguracao}
-                style={{
-                  backgroundColor: 'dodgerblue',
-                  marginLeft: 20,
-                  paddingHorizontal: 2,
-                }}>
-                <Icon name="format-list-checks" size={32} color={'white'} />
-              </TouchableOpacity>
-            </View>
-          ) : (
-            <View style={styles.listaColunasFooterView}>
-              <Text>
-                Nomes :<Text>10</Text>
-              </Text>
-              <Text>
-                Grupos : <Text>2</Text>
-              </Text>
-              <Text>
-                Homens:<Text>10</Text>
-              </Text>
-              <Text>
-                Mulheres: <Text>2</Text>
-              </Text>
-              <Text>Dados</Text>
-            </View>
-          )}
+          <View style={styles.listaColunasFooterView}>
+            <Button
+              title="Sortear Grupos"
+              onPress={generateGroups}
+              disabled={nomesLista.length < 6 || groups.length >= 1}
+            />
+            <TouchableOpacity
+              onPress={toggleConfiguracao}
+              style={{
+                backgroundColor: 'dodgerblue',
+                marginLeft: 20,
+                paddingHorizontal: 2,
+              }}>
+              <IconMaterial name="settings" size={32} color={'white'} />
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
     );
@@ -356,16 +361,32 @@ const Grupo = ({navigation}) => {
             backgroundColor: 'azure',
           },
         ]}>
-        <View style={styles.listaColunasHeader}>
-          <TouchableOpacity onPress={toPrevioustPage}>
-            <Icon name="page-previous-outline" size={32} color={'white'} />
+        <View
+          style={[
+            styles.listaColunasHeader,
+            {
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              width: '100%',
+              paddingHorizontal: 10,
+            },
+          ]}>
+          <TouchableOpacity onPress={() => toPage(0)}>
+            <Icon name="page-previous-outline" size={32} color={'black'} />
           </TouchableOpacity>
-          <Text>Grupos</Text>
-          <TouchableOpacity onPress={toggleGrupoMenu}>
-            <Icon name="format-list-checks" size={32} color={'white'} />
+          <Text style={{fontWeight: '500', fontSize: 18}}>Grupos</Text>
+          <TouchableOpacity
+            onPress={toggleGrupoMenu}
+            style={{
+              backgroundColor: 'dodgerblue',
+              marginLeft: 20,
+              paddingHorizontal: 2,
+            }}>
+            <IconMaterial name="settings" size={32} color={'white'} />
           </TouchableOpacity>
-          <TouchableOpacity onPress={toNextPage}>
-            <Icon name="page-next-outline" size={32} color={'white'} />
+          <TouchableOpacity onPress={() => toPage(2)}>
+            <Icon name="page-next-outline" size={32} color={'black'} />
           </TouchableOpacity>
         </View>
         <View>
@@ -487,7 +508,7 @@ const Grupo = ({navigation}) => {
           },
         ]}>
         <View style={styles.listaColunasHeaderPlacar}>
-          <TouchableOpacity onPress={toPrevioustPage}>
+          <TouchableOpacity onPress={() => toPage(1)}>
             <Icon name="page-previous-outline" size={32} color={'white'} />
           </TouchableOpacity>
           <Text style={{color: 'white'}}>Placar</Text>
@@ -596,7 +617,7 @@ const Grupo = ({navigation}) => {
     );
   };
 
-  const ModalNomes = () => {
+  const ModalConfiguracaoNomes = () => {
     return (
       <Modal
         isVisible={modalNomeMenu}
@@ -753,7 +774,7 @@ const Grupo = ({navigation}) => {
     );
   };
 
-  const ModalGrupos = () => {
+  const ModalConfiguracaoGrupos = () => {
     return (
       <Modal
         isVisible={modalGruposMenu}
@@ -819,8 +840,8 @@ const Grupo = ({navigation}) => {
         </ScrollView>
       </View>
       <ModalConfiguracao />
-      <ModalNomes />
-      <ModalGrupos />
+      <ModalConfiguracaoNomes />
+      <ModalConfiguracaoGrupos />
     </View>
   );
 };
@@ -885,8 +906,6 @@ const styles = StyleSheet.create({
     height: 60,
     justifyContent: 'center',
     alignItems: 'center',
-    flexDirection: 'row',
-    gap: 10,
   },
   listaColunasHeaderPlacar: {
     backgroundColor: 'black',
