@@ -46,12 +46,12 @@ const InitialValue = [
 
 const Grupo = ({navigation}) => {
   const [nomes, setNomes] = useState(InitialValue);
-  const [newName, setNewName] = useState();
-
   const [nomesLista, setNomesLista] = useState(nomes);
   const [groups, setGroups] = useState([]);
+  const [newName, setNewName] = useState();
+  const [selectedNome, setSelectedNome] = useState([]);
+  const [selectedGroups, setSelectedGroups] = useState([]);
 
-  const [refreshing, setRefreshing] = useState(false);
   const [modalNomeMenu, setModalNomeMenu] = useState(false);
   const [modalNomeItem, setModalNomeItem] = useState(false);
   const [modalGruposMenu, setModalGruposMenu] = useState(false);
@@ -64,7 +64,13 @@ const Grupo = ({navigation}) => {
   const [listaInfo, setListaInfo] = useState(false);
   const [offset, setOffset] = useState(0);
   const scrollViewRef = useRef(null);
+
   let screenIndex = 0;
+  let dadosTotalNomes = 0;
+  let dadosTotalGrupos = 0;
+  let dadosNomesAguardando = 0;
+  let dadosNomesHomem = 0;
+  let dadosNomesMulher = 0;
 
   const toggleNomeMenu = () => {
     setModalNomeMenu(!modalNomeMenu);
@@ -221,9 +227,27 @@ const Grupo = ({navigation}) => {
     });
   };
 
+  const carregaDados = () => {
+    dadosTotalNomes = nomesLista.length;
+    dadosTotalGrupos = Math.floor(nomesLista.length / 6);
+    dadosNomesAguardando = Math.floor(nomesLista.length % 6);
+    dadosNomesHomem =
+      nomesLista !== null &&
+      nomesLista.filter &&
+      nomesLista?.filter(nomesLista => !nomesLista.includes('*')).length >= 1
+        ? nomesLista?.filter(nomesLista => !nomesLista.includes('*')).length
+        : 0;
+    dadosNomesMulher =
+      nomesLista !== null &&
+      nomesLista.filter &&
+      nomesLista?.filter(nomesLista => nomesLista.includes('*')).length >= 1
+        ? nomesLista?.filter(nomesLista => nomesLista.includes('*')).length
+        : 0;
+  };
+
   useEffect(() => {
-    refreshNomes();
-  }, [nomes, groups]);
+    carregaDados();
+  }, [modalNomeMenu]);
 
   const ViewNomes = () => {
     return (
@@ -284,7 +308,7 @@ const Grupo = ({navigation}) => {
               nomesLista.map &&
               //Listagem dos nomes
               nomesLista?.map((item, index) => (
-                <View
+                <TouchableOpacity
                   key={index}
                   style={[
                     styles.listaColunasNomes,
@@ -294,9 +318,8 @@ const Grupo = ({navigation}) => {
                         : 'mediumslateblue',
                     },
                   ]}>
-                  <Text style={styles.listaColunasNomesText}>{item}</Text>
                   <TouchableOpacity
-                    style={{marginLeft: 10, right: 10}}
+                    style={{marginRight: 10, left: 10}}
                     onPress={() =>
                       Alert.alert(
                         'Remover Nome',
@@ -325,7 +348,11 @@ const Grupo = ({navigation}) => {
                       color={'white'}
                     />
                   </TouchableOpacity>
-                </View>
+                  <Text
+                    style={[styles.listaColunasNomesText, {marginRight: 20}]}>
+                    {item}
+                  </Text>
+                </TouchableOpacity>
               ))}
           </View>
         </ScrollView>
@@ -684,7 +711,7 @@ const Grupo = ({navigation}) => {
                       flexDirection: 'row',
                     }}>
                     <Text>Total nomes :</Text>
-                    <Text>{nomesLista.length}</Text>
+                    <Text>{dadosTotalNomes}</Text>
                   </View>
                   <View
                     style={{
@@ -692,7 +719,7 @@ const Grupo = ({navigation}) => {
                       flexDirection: 'row',
                     }}>
                     <Text>Total grupos :</Text>
-                    <Text>{Math.floor(nomesLista.length / 6)}</Text>
+                    <Text>{dadosTotalGrupos}</Text>
                   </View>
                   <View
                     style={{
@@ -700,7 +727,7 @@ const Grupo = ({navigation}) => {
                       flexDirection: 'row',
                     }}>
                     <Text>Aguardando : </Text>
-                    <Text>{Math.floor(nomesLista.length % 6)}</Text>
+                    <Text>{dadosNomesAguardando}</Text>
                   </View>
                 </View>
                 <View style={{width: 120}}>
@@ -710,17 +737,7 @@ const Grupo = ({navigation}) => {
                       flexDirection: 'row',
                     }}>
                     <Text>Homens :</Text>
-                    <Text>
-                      {nomesLista !== null &&
-                      nomesLista.filter &&
-                      nomesLista?.filter(
-                        nomesLista => !nomesLista.includes('*'),
-                      ).length >= 1
-                        ? nomesLista?.filter(
-                            nomesLista => !nomesLista.includes('*'),
-                          ).length
-                        : 0}
-                    </Text>
+                    <Text>{dadosNomesHomem}</Text>
                   </View>
                   <View
                     style={{
@@ -728,16 +745,7 @@ const Grupo = ({navigation}) => {
                       flexDirection: 'row',
                     }}>
                     <Text>Mulheres :</Text>
-                    <Text>
-                      {nomesLista !== null &&
-                      nomesLista.filter &&
-                      nomesLista?.filter(nomesLista => nomesLista.includes('*'))
-                        .length >= 1
-                        ? nomesLista?.filter(nomesLista =>
-                            nomesLista.includes('*'),
-                          ).length
-                        : 0}
-                    </Text>
+                    <Text>{dadosNomesMulher}</Text>
                   </View>
                 </View>
               </View>
@@ -768,6 +776,41 @@ const Grupo = ({navigation}) => {
               disabled={nomesLista.length <= 0}
             />
             <Button title="Carregar lista antigas salvas" onPress={() => {}} />
+          </View>
+        </View>
+      </Modal>
+    );
+  };
+
+  const ModalNomeItem = () => {
+    return (
+      <Modal
+        isVisible={modalNomeItem}
+        animationIn="slideInUp"
+        animationOut="slideOutDown">
+        <View
+          style={{
+            backgroundColor: '#000000c0',
+          }}>
+          <View
+            style={{
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              paddingHorizontal: 5,
+            }}>
+            <Text
+              style={{
+                color: 'white',
+                fontSize: 20,
+                lineHeight: 40,
+                fontWeight: 'bold',
+              }}>
+              Item
+            </Text>
+            <TouchableOpacity onPress={toggleNomeMenu}>
+              <Icon name="close-circle-outline" size={30} color="white" />
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>

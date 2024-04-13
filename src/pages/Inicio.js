@@ -28,6 +28,7 @@ const Inicio = ({navigation}) => {
               <Text style={styles.menuButtonText}>Sortear Grupo</Text>
             </View>
           </TouchableOpacity>
+
           <TouchableOpacity onPress={() => navigation.navigate('Placar')}>
             <View style={styles.menuButton}>
               <Icon name="volleyball" size={120} color="white" />
@@ -46,6 +47,14 @@ const Inicio = ({navigation}) => {
             <View style={styles.menuButton}>
               <Icon name="basketball-hoop-outline" size={120} color="white" />
               <Text style={styles.menuButtonText}>Placar Basquete</Text>
+            </View>
+          </TouchableOpacity>
+          <TouchableOpacity
+            disabled={true}
+            onPress={() => navigation.navigate('NewGrupo')}>
+            <View style={styles.menuButton}>
+              <Icon name="account-group" size={120} color="white" />
+              <Text style={styles.menuButtonText}>Novo Grupo</Text>
             </View>
           </TouchableOpacity>
         </View>
