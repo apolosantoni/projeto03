@@ -57,6 +57,14 @@ const Inicio = ({navigation}) => {
               <Text style={styles.menuButtonText}>Novo Grupo</Text>
             </View>
           </TouchableOpacity>
+          <TouchableOpacity
+            disabled={false}
+            onPress={() => navigation.navigate('Timer')}>
+            <View style={styles.menuButton}>
+              <Icon name="account-group" size={120} color="white" />
+              <Text style={styles.menuButtonText}>Timer</Text>
+            </View>
+          </TouchableOpacity>
         </View>
       </ImageBackground>
     </View>

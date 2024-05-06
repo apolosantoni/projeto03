@@ -246,8 +246,8 @@ const Grupo = ({navigation}) => {
   };
 
   useEffect(() => {
-    carregaDados();
-  }, [modalNomeMenu]);
+    //carregaDados();
+  }, []);
 
   const ViewNomes = () => {
     return (
@@ -263,8 +263,8 @@ const Grupo = ({navigation}) => {
               placeholder="Enter com o(s) nome(s) separado por ','"
               value={newName}
               onChangeText={text => setNewName(text)}
-              onEndEditing={addNomes}
-              focusable={true}
+              //onEndEditing={addNomes}
+              //focusable={true}
             />
           </View>
           <View
@@ -612,7 +612,7 @@ const Grupo = ({navigation}) => {
                 justifyContent: 'space-between',
                 alignItems: 'center',
               }}>
-              <Text>Nomes obrigatorios por grupo :</Text>
+              <Text>Quantidade por grupo :</Text>
               <TextInput
                 value="1"
                 placeholder="1"
@@ -627,7 +627,7 @@ const Grupo = ({navigation}) => {
                 alignItems: 'center',
               }}>
               <Text>Numero de nomes por grupo : </Text>
-              <TextInput value="6" placeholder="6" />
+              <TextInput value="6" placeholder="6" keyboardType="numeric" />
             </View>
             <View
               style={{
@@ -635,8 +635,17 @@ const Grupo = ({navigation}) => {
                 justifyContent: 'space-between',
                 alignItems: 'center',
               }}>
-              <Text>Sortear grupos de forma aleatoria ?</Text>
-              <Switch value={true} />
+              <Text>Modo sorteio</Text>
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  columnGap: 10,
+                }}>
+                <Text>Manual</Text>
+                <Switch value={true} />
+                <Text>Aleatório</Text>
+              </View>
             </View>
           </View>
         </View>
@@ -858,6 +867,7 @@ const Grupo = ({navigation}) => {
             <Button title="Excluir todos grupos" onPress={limparGrupos} />
             <Button
               title="Criar grupo manualmente"
+              disabled={groups.length == 3 ? true : false}
               onPress={generateGroupsManual}
             />
             <Button title="Sortear Novamente" onPress={toggleGrupoMenu} />
