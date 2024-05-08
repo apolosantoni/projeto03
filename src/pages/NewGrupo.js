@@ -1,8 +1,9 @@
-import React, {useRef, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {
   Alert,
   Dimensions,
   ScrollView,
+  StatusBar,
   StyleSheet,
   Text,
   TextInput,
@@ -14,8 +15,8 @@ import Modal from 'react-native-modal';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import IconMaterial from 'react-native-vector-icons/MaterialIcons';
 import Feather from 'react-native-vector-icons/Feather';
+import {SafeAreaView, useSafeAreaInsets} from 'react-native-safe-area-context';
 
-const {width, height} = Dimensions.get('window');
 const Demo = {
   jogadores: {
     id: 15,
@@ -47,6 +48,7 @@ const Demo = {
     lista: [],
   },
 };
+
 const Initial = {
   jogadores: {
     id: 0,
@@ -62,14 +64,18 @@ const Initial = {
     lista: [],
   },
 };
+
 const Cores = {
-  background: 'papayawhip',
-  foreground: 'navajowhite',
-  buttonBackground: 'dodgerblue',
-  buttonForeground: 'papayawhip',
-  textNormal: 'black',
-  textDestaque: 'white',
+  background: '#ffefd5', //papayawhip
+  foreground: '#ffdead', //navajowhite
+  buttonBackground: '#1e90ff', //dodgerblue,
+  buttonForeground: '#ffefd5', //papayawhip
+  textNormal: '#000000', //black
+  textDestaque: '#ffffff', //white
 };
+
+const {width, height} = Dimensions.get('window');
+//const insets = useSafeAreaInsets();
 
 const NewGrupo = ({navigation}) => {
   //listas
@@ -86,6 +92,7 @@ const NewGrupo = ({navigation}) => {
   const [grupoManual, setGrupoManual] = useState(false);
   const [modalMenu, setModalMenu] = useState(false);
   const [modalPlacar, setModalPlacar] = useState(false);
+  const [modalInformacoes, setModalInformacoes] = useState(false);
 
   //variaveis auxiliares
   const [offset, setOffset] = useState(0);
@@ -98,6 +105,10 @@ const NewGrupo = ({navigation}) => {
   //* Controles de menus */
   const toggleModalMenu = () => {
     setModalMenu(!modalMenu);
+  };
+
+  const toggleModalInformacoes = () => {
+    setModalInformacoes(!modalInformacoes);
   };
 
   const toggleAddNomeLista = () => {
@@ -375,6 +386,35 @@ const NewGrupo = ({navigation}) => {
       },
     ]);
 
+  let checkGrupoNomes = id => {
+    let count = dataGrupos.lista?.filter(item => item.id == id);
+    //console.log('checkGrupoNomes' && count[0].nomes.length);
+    let ret = false;
+    if (count.length > 0 && count[0].nomes.length > 0) {
+      ret = true;
+    }
+    return ret;
+  };
+
+  let checkGrupos = id => {
+    let count = dataGrupos.lista;
+    let ret = false;
+    if (count[0].nomes.length > 0) {
+      ret = true;
+    }
+    return ret;
+  };
+
+  let checkNomes = () => {
+    let count = dataJogadores.lista.length;
+
+    let ret = false;
+    if (count.length > 0) {
+      ret = true;
+    }
+    return ret;
+  };
+
   /** Views  */
 
   const ViewNomes = () => {
@@ -387,11 +427,11 @@ const NewGrupo = ({navigation}) => {
               <TouchableOpacity
                 onPress={toggleModalMenu}
                 style={styles.buttonIconSquare}>
-                <Feather name="menu" size={32} color={'black'} />
+                <Feather name="menu" size={32} color={'#000000'} />
               </TouchableOpacity>
               <Text style={styles.headerText}>Aguardando</Text>
               <TouchableOpacity onPress={() => toPage(1)}>
-                <Feather name="users" size={32} color={'black'} />
+                <Feather name="users" size={32} color={'#000000'} />
               </TouchableOpacity>
             </View>
           </View>
@@ -400,21 +440,40 @@ const NewGrupo = ({navigation}) => {
           {/** Menu*/}
           <View style={styles.addNomeContainer}>
             <View style={{flexDirection: 'row', columnGap: 10}}>
-              <TouchableOpacity onPress={toggleAddNomeLista}>
-                <Feather name="user-plus" size={32} color={'white'} />
+              <TouchableOpacity
+                style={styles.buttonWithText}
+                onPress={toggleAddNomeLista}>
+                <Feather name="user-plus" size={32} color={'#ffffff'} />
+                <Text
+                  style={{
+                    color: '#ffffff',
+                    fontSize: 12,
+                  }}>
+                  Adicionar
+                </Text>
               </TouchableOpacity>
               <TouchableOpacity
+                style={styles.buttonWithText}
                 onPress={() => setDataJogadoresSave(dataJogadores.lista)}
                 disabled={dataJogadores.lista.length <= 0}>
                 <Feather
                   name="save"
                   size={32}
                   color={
-                    dataJogadores.lista.length <= 0 ? 'lightgray' : 'white'
+                    dataJogadores.lista.length <= 0 ? '#cccccc' : '#ffffff'
                   }
                 />
+                <Text
+                  style={{
+                    color:
+                      dataJogadores.lista.length <= 0 ? '#cccccc' : '#ffffff',
+                    fontSize: 12,
+                  }}>
+                  Salvar
+                </Text>
               </TouchableOpacity>
               <TouchableOpacity
+                style={styles.buttonWithText}
                 onPress={() => {
                   setDataJogadores(prevState => ({
                     ...prevState,
@@ -425,10 +484,18 @@ const NewGrupo = ({navigation}) => {
                 <Feather
                   name="folder"
                   size={32}
-                  color={dataJogadoresSave == null ? 'lightgray' : 'white'}
+                  color={dataJogadoresSave == null ? '#cccccc' : '#ffffff'}
                 />
+                <Text
+                  style={{
+                    color: dataJogadoresSave == null ? '#cccccc' : '#ffffff',
+                    fontSize: 12,
+                  }}>
+                  Carregar
+                </Text>
               </TouchableOpacity>
               <TouchableOpacity
+                style={styles.buttonWithText}
                 onPress={() =>
                   setDataJogadores(prevState => ({
                     ...prevState,
@@ -439,8 +506,16 @@ const NewGrupo = ({navigation}) => {
                 <Feather
                   name="trash"
                   size={32}
-                  color={dataJogadores.lista.length > 0 ? 'white' : 'lightgray'}
+                  color={dataJogadores.lista.length > 0 ? '#ffffff' : '#cccccc'}
                 />
+                <Text
+                  style={{
+                    color:
+                      dataJogadores.lista.length > 0 ? '#ffffff' : '#cccccc',
+                    fontSize: 12,
+                  }}>
+                  Limpar
+                </Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -460,9 +535,7 @@ const NewGrupo = ({navigation}) => {
                       style={[
                         styles.itemLista,
                         {
-                          backgroundColor: item?.pref
-                            ? 'plum'
-                            : 'mediumslateblue',
+                          backgroundColor: item?.pref ? '#dda0dd' : '#7b68ee',
                         },
                       ]}>
                       <TouchableOpacity
@@ -485,7 +558,7 @@ const NewGrupo = ({navigation}) => {
                         <Feather
                           name={item?.pref ? 'user-check' : 'user'}
                           size={25}
-                          color={'white'}
+                          color={'#ffffff'}
                         />
                       </TouchableOpacity>
                       <Text
@@ -523,7 +596,7 @@ const NewGrupo = ({navigation}) => {
                         <Icon
                           name="delete-forever-outline"
                           size={30}
-                          color={'white'}
+                          color={'#ffffff'}
                         />
                       </TouchableOpacity>
                     </View>
@@ -535,35 +608,6 @@ const NewGrupo = ({navigation}) => {
     );
   };
 
-  let checkGrupoNomes = id => {
-    let count = dataGrupos.lista?.filter(item => item.id == id);
-    //console.log('checkGrupoNomes' && count[0].nomes.length);
-    let ret = false;
-    if (count.length > 0 && count[0].nomes.length > 0) {
-      ret = true;
-    }
-    return ret;
-  };
-
-  let checkGrupos = id => {
-    let count = dataGrupos.lista;
-    let ret = false;
-    if (count[0].nomes.length > 0) {
-      ret = true;
-    }
-    return ret;
-  };
-
-  let checkNomes = () => {
-    let count = dataJogadores.lista.length;
-
-    let ret = false;
-    if (count.length > 0) {
-      ret = true;
-    }
-    return ret;
-  };
-
   const ViewGrupos = () => {
     return (
       <View style={styles.viewColunas}>
@@ -572,7 +616,7 @@ const NewGrupo = ({navigation}) => {
           <View style={[styles.header, {flexDirection: 'column'}]}>
             <View style={styles.headerLine}>
               <TouchableOpacity onPress={() => toPage(0)}>
-                <Feather name="list" size={32} color={'black'} />
+                <Feather name="list" size={32} color={'#000000'} />
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={() => {}}
@@ -580,11 +624,11 @@ const NewGrupo = ({navigation}) => {
                   styles.buttonIconSquare,
                   {flexDirection: 'row', columnGap: 10, alignItems: 'center'},
                 ]}>
-                <Feather name="menu" size={32} color={'black'} />
+                <Feather name="menu" size={32} color={'#000000'} />
                 <Text style={styles.headerText}>Grupos</Text>
               </TouchableOpacity>
               <TouchableOpacity onPress={() => toPage(2)}>
-                <Icon name="scoreboard-outline" size={32} color={'black'} />
+                <Icon name="scoreboard-outline" size={32} color={'#000000'} />
               </TouchableOpacity>
             </View>
           </View>
@@ -601,7 +645,7 @@ const NewGrupo = ({navigation}) => {
                 justifyContent: 'space-between',
               }}>
               <TouchableOpacity
-                style={{alignItems: 'center', rowGap: -5}}
+                style={styles.buttonWithText}
                 onPress={() =>
                   setDataGrupos(prevState => {
                     const ultimoId = dataGrupos.id + 1;
@@ -626,8 +670,8 @@ const NewGrupo = ({navigation}) => {
                   color={
                     dataGrupos.lista.length >=
                     Math.floor(dataJogadores.lista.length / 6)
-                      ? 'lightgray'
-                      : 'white'
+                      ? '#cccccc'
+                      : '#ffffff'
                   }
                 />
                 <Text
@@ -635,32 +679,32 @@ const NewGrupo = ({navigation}) => {
                     color:
                       dataGrupos.lista.length >=
                       Math.floor(dataJogadores.lista.length / 6)
-                        ? 'lightgray'
-                        : 'white',
+                        ? '#cccccc'
+                        : '#ffffff',
                     fontSize: 12,
                   }}>
                   Criar
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={{alignItems: 'center', rowGap: -5}}
+                style={styles.buttonWithText}
                 onPress={generateGroups}
                 disabled={dataGrupos.lista.length > 0}>
                 <Feather
                   name="zap"
                   size={32}
-                  color={dataGrupos.lista.length > 0 ? 'lightgray' : 'white'}
+                  color={dataGrupos.lista.length > 0 ? '#cccccc' : '#ffffff'}
                 />
                 <Text
                   style={{
-                    color: dataGrupos.lista.length > 0 ? 'lightgray' : 'white',
+                    color: dataGrupos.lista.length > 0 ? '#cccccc' : '#ffffff',
                     fontSize: 12,
                   }}>
                   Gerar
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={{alignItems: 'center', rowGap: -5}}
+                style={styles.buttonWithText}
                 onPress={() => {
                   setDataGrupos(prevState => ({
                     ...prevState,
@@ -675,11 +719,11 @@ const NewGrupo = ({navigation}) => {
                 <IconMaterial
                   name="group-off"
                   size={32}
-                  color={dataGrupos.lista.length <= 0 ? 'lightgray' : 'white'}
+                  color={dataGrupos.lista.length <= 0 ? '#cccccc' : '#ffffff'}
                 />
                 <Text
                   style={{
-                    color: dataGrupos.lista.length <= 0 ? 'lightgray' : 'white',
+                    color: dataGrupos.lista.length <= 0 ? '#cccccc' : '#ffffff',
                     fontSize: 12,
                   }}>
                   Limpar
@@ -711,7 +755,7 @@ const NewGrupo = ({navigation}) => {
                               style={{paddingLeft: 10}}
                               name="edit"
                               size={22}
-                              color={'black'}
+                              color={'#000000'}
                             />
                           </View>
                         </TouchableOpacity>
@@ -730,7 +774,7 @@ const NewGrupo = ({navigation}) => {
                                 <Feather
                                   name={lista.pref ? 'user-check' : 'user'}
                                   size={25}
-                                  color={'black'}
+                                  color={'#000000'}
                                 />
                                 <Text style={{fontSize: 18}}>{lista.nome}</Text>
                               </TouchableOpacity>
@@ -756,7 +800,7 @@ const NewGrupo = ({navigation}) => {
           alignItems: 'center',
         }}>
         <View>
-          <Text style={{color: 'white', fontSize: 50, lineHeight: 60}}>
+          <Text style={{color: '#ffffff', fontSize: 50, lineHeight: 60}}>
             {nameEquipe}
           </Text>
         </View>
@@ -774,7 +818,7 @@ const NewGrupo = ({navigation}) => {
             </Text>
             <Text
               style={{
-                color: 'white',
+                color: '#ffffff',
                 fontSize: 220,
                 lineHeight: 220,
                 fontFamily: 'Digital Display',
@@ -784,7 +828,7 @@ const NewGrupo = ({navigation}) => {
           </TouchableOpacity>
         </View>
         <View>
-          <Text style={{color: 'white', fontSize: 30, lineHeight: 30}}>
+          <Text style={{color: '#ffffff', fontSize: 30, lineHeight: 30}}>
             X-X-X
           </Text>
         </View>
@@ -794,51 +838,176 @@ const NewGrupo = ({navigation}) => {
 
   const ViewPlacar = () => {
     return (
-      <View
-        style={[
-          styles.placarView,
-          {
-            backgroundColor: 'black',
-          },
-        ]}>
-        <>
-          {/**Header */}
-          <View style={styles.placarHeader}>
-            <TouchableOpacity onPress={() => toPage(1)}>
-              <Icon name="page-previous-outline" size={32} color={'white'} />
-            </TouchableOpacity>
-            <Text style={{color: 'white'}}>Placar</Text>
-            <TouchableOpacity onPress={toggleModalPlacar}>
-              <Icon name="format-list-checks" size={32} color={'white'} />
-            </TouchableOpacity>
-          </View>
-        </>
-        <>
-          <View
-            style={{
-              flexDirection: 'row',
-              justifyContent: 'space-around',
-              alignItems: 'center',
-            }}>
-            <DisplayPlacar
-              nameEquipe={'Equipe A'}
-              ponto={pontoA}
-              pontoPlus={() => setPontoA(pontoA + 1)}
-              pontoMinus={() => setPontoA(pontoA - 1)}
-            />
-            <DisplayPlacar
-              nameEquipe={'Equipe B'}
-              ponto={pontoB}
-              pontoPlus={() => setPontoB(pontoB + 1)}
-              pontoMinus={() => setPontoB(pontoB - 1)}
-            />
-          </View>
-        </>
+      <View style={[styles.placarView]}>
+        <View
+          style={{
+            top: 0,
+            left: 0,
+            position: 'relative',
+            transform: [{rotate: '90deg'}],
+          }}>
+          <>
+            {/**Header */}
+            <View style={styles.placarHeader}>
+              <TouchableOpacity onPress={() => toPage(1)}>
+                <Icon
+                  name="page-previous-outline"
+                  size={32}
+                  color={'#ffffff'}
+                />
+              </TouchableOpacity>
+              <Text style={{color: 'white'}}>Placar</Text>
+              <TouchableOpacity onPress={toggleModalPlacar}>
+                <Icon name="format-list-checks" size={32} color={'#ffffff'} />
+              </TouchableOpacity>
+            </View>
+          </>
+          <>
+            <View
+              style={{
+                width: height,
+                flexDirection: 'row',
+                justifyContent: 'space-evenly',
+                alignItems: 'center',
+              }}>
+              <DisplayPlacar
+                nameEquipe={'Equipe A'}
+                ponto={pontoA}
+                pontoPlus={() => setPontoA(pontoA + 1)}
+                pontoMinus={() => setPontoA(pontoA - 1)}
+              />
+              <DisplayPlacar
+                nameEquipe={'Equipe B'}
+                ponto={pontoB}
+                pontoPlus={() => setPontoB(pontoB + 1)}
+                pontoMinus={() => setPontoB(pontoB - 1)}
+              />
+            </View>
+          </>
+        </View>
       </View>
     );
   };
 
   /** Menus */
+
+  const MenuInformacoes = () => {
+    return (
+      <Modal
+        isVisible={modalInformacoes}
+        animationIn="slideInUp"
+        animationOut="slideOutDown">
+        <View style={styles.modalMenu}>
+          <View style={styles.modalContainer}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalHeaderText}>Informações</Text>
+              <TouchableOpacity onPress={toggleModalInformacoes}>
+                <Icon name="close" size={30} color={'#000000'} />
+              </TouchableOpacity>
+            </View>
+            <View style={[styles.modalSection, {flexDirection: 'column'}]}>
+              <>
+                <ScrollView>
+                  <View style={{rowGap: 10}}>
+                    <View style={styles.headerLine}>
+                      <Text style={styles.headerText}>
+                        Sistema de sorteio de volei
+                      </Text>
+                    </View>
+                    <View style={{flexDirection: 'row', columnGap: 5}}>
+                      <Text>Desenvolvidor por :</Text>
+                      <Text style={{color: '#000000', fontWeight: '400'}}>
+                        Apolo Oxosse Santoni
+                      </Text>
+                    </View>
+                    <View style={{flexDirection: 'row', columnGap: 5}}>
+                      <Text>Versão :</Text>
+                      <Text style={{color: '#000000', fontWeight: '400'}}>
+                        1.0
+                      </Text>
+                    </View>
+
+                    <View style={styles.headerLine}>
+                      <Text style={styles.headerText}>Desenvolvimento</Text>
+                    </View>
+                    <View style={{flexDirection: 'row', columnGap: 5}}>
+                      <Text>Implementado :</Text>
+                      <View>
+                        <Text style={{color: 'black', fontWeight: '400'}}>
+                          Listagem de nomes
+                        </Text>
+                        <Text style={{color: 'black', fontWeight: '400'}}>
+                          Sorteio manual de grupos
+                        </Text>
+                        <Text style={{color: 'black', fontWeight: '400'}}>
+                          Sorteio aleatorio de grupos
+                        </Text>
+                        <Text style={{color: 'black', fontWeight: '400'}}>
+                          Placar de contagem simples.
+                        </Text>
+                      </View>
+                    </View>
+                    <View style={{flexDirection: 'row', columnGap: 5}}>
+                      <Text>Desenvolvimento :</Text>
+                      <View style={{width: '60%'}}>
+                        <Text style={{color: '#000000', fontWeight: '400'}}>
+                          Listagem de nomes online
+                        </Text>
+                        <Text
+                          style={{color: '#000000', fontWeight: '400'}}
+                          numberOfLines={2}>
+                          Mapeamento de locais de pratica esportiva
+                        </Text>
+                        <Text style={{color: '#000000', fontWeight: '400'}}>
+                          Grupos abertos e fechado
+                        </Text>
+                        <Text style={{color: '#000000', fontWeight: '400'}}>
+                          Sistema de checkin para jogo.
+                        </Text>
+                        <Text style={{color: '#000000', fontWeight: '400'}}>
+                          Confirmação de presença por proximidade.
+                        </Text>
+                      </View>
+                    </View>
+
+                    <View style={styles.headerLine}>
+                      <Text style={styles.headerText}>Doações e contato</Text>
+                    </View>
+                    <View style={{flexDirection: 'row', columnGap: 5}}>
+                      <Text>Chave Pix :</Text>
+                      <Text style={{color: '#000000', fontWeight: '400'}}>
+                        (12) 99110-3307
+                      </Text>
+                    </View>
+                    <View
+                      style={{
+                        flexDirection: 'row',
+                        columnGap: 5,
+                        width: '70%',
+                      }}>
+                      <Text>Meta :</Text>
+                      <Text
+                        style={{
+                          color: '#000000',
+                          fontWeight: '400',
+                          textAlign: 'justify',
+                        }}>
+                        $25,00 (Vinte e Cinco dolares){' '}
+                        <Text>
+                          para publicação no playStore, sem previsção para
+                          versão IOS
+                        </Text>
+                      </Text>
+                    </View>
+                  </View>
+                </ScrollView>
+              </>
+            </View>
+          </View>
+        </View>
+      </Modal>
+    );
+  };
 
   const Menu = () => {
     return (
@@ -851,7 +1020,7 @@ const NewGrupo = ({navigation}) => {
             <View style={styles.modalHeader}>
               <Text style={styles.modalHeaderText}>Menu</Text>
               <TouchableOpacity onPress={toggleModalMenu}>
-                <Icon name="close" size={30} color={'black'} />
+                <Icon name="close" size={30} color={'#000000'} />
               </TouchableOpacity>
             </View>
             <View style={[styles.modalSection, {flexDirection: 'column'}]}>
@@ -861,7 +1030,7 @@ const NewGrupo = ({navigation}) => {
                     style={{
                       width: '100%',
                       marginTop: 10,
-                      backgroundColor: 'white',
+                      backgroundColor: '#ffffff',
                       rowGap: 20,
                     }}>
                     <TouchableOpacity
@@ -874,14 +1043,14 @@ const NewGrupo = ({navigation}) => {
                         toggleModalMenu;
                       }}
                       style={{
-                        backgroundColor: 'lightgray',
+                        backgroundColor: '#999999',
                         borderRadius: 7,
                         paddingVertical: 5,
                         paddingHorizontal: 10,
                         justifyContent: 'center',
                         alignItems: 'center',
                       }}>
-                      <Text style={{color: 'black'}}>
+                      <Text style={{color: '#000000'}}>
                         Carregar demonstrativo
                       </Text>
                     </TouchableOpacity>
@@ -895,14 +1064,29 @@ const NewGrupo = ({navigation}) => {
                         toggleModalMenu;
                       }}
                       style={{
-                        backgroundColor: 'lightgray',
+                        backgroundColor: '#999999',
                         borderRadius: 7,
                         paddingVertical: 5,
                         paddingHorizontal: 10,
                         justifyContent: 'center',
                         alignItems: 'center',
                       }}>
-                      <Text style={{color: 'black'}}>Resetar dados</Text>
+                      <Text style={{color: '#000000'}}>Resetar dados</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      onPress={() => {
+                        setModalInformacoes(true);
+                        setModalMenu(false);
+                      }}
+                      style={{
+                        backgroundColor: '#999999',
+                        borderRadius: 7,
+                        paddingVertical: 5,
+                        paddingHorizontal: 10,
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                      }}>
+                      <Text style={{color: '#000000'}}>Informação</Text>
                     </TouchableOpacity>
                   </View>
                 </ScrollView>
@@ -925,7 +1109,7 @@ const NewGrupo = ({navigation}) => {
             <View style={styles.modalHeader}>
               <Text style={styles.modalHeaderText}>Adicionar Nome </Text>
               <TouchableOpacity onPress={toggleAddNomeLista}>
-                <Icon name="close" size={30} color={'black'} />
+                <Icon name="close" size={30} color={'#000000'} />
               </TouchableOpacity>
             </View>
             <View style={[styles.modalSection, {flexDirection: 'column'}]}>
@@ -934,7 +1118,7 @@ const NewGrupo = ({navigation}) => {
                   style={{
                     width: '100%',
                     marginTop: 10,
-                    backgroundColor: 'white',
+                    backgroundColor: '#ffffff',
                     borderWidth: 1,
                   }}>
                   <TextInput
@@ -989,7 +1173,7 @@ const NewGrupo = ({navigation}) => {
             <View style={styles.modalHeader}>
               <Text style={styles.modalHeaderText}>Configuração </Text>
               <TouchableOpacity onPress={toggleModalPlacar}>
-                <Icon name="close" size={30} color={'black'} />
+                <Icon name="close" size={30} color={'#000000'} />
               </TouchableOpacity>
             </View>
             <View style={[styles.modalSection, {flexDirection: 'column'}]}>
@@ -999,7 +1183,7 @@ const NewGrupo = ({navigation}) => {
                     style={{
                       width: '100%',
                       marginTop: 10,
-                      backgroundColor: 'white',
+                      backgroundColor: '#ffffff',
                     }}>
                     <TouchableOpacity
                       onPress={() => {
@@ -1008,14 +1192,14 @@ const NewGrupo = ({navigation}) => {
                         setModalPlacar(false);
                       }}
                       style={{
-                        backgroundColor: 'lightgray',
+                        backgroundColor: '#999999',
                         borderRadius: 7,
                         paddingVertical: 5,
                         paddingHorizontal: 10,
                         justifyContent: 'center',
                         alignItems: 'center',
                       }}>
-                      <Text style={{color: 'black'}}>Resetar placar</Text>
+                      <Text style={{color: '#000000'}}>Resetar placar</Text>
                     </TouchableOpacity>
                   </View>
                 </ScrollView>
@@ -1040,7 +1224,7 @@ const NewGrupo = ({navigation}) => {
                 Grupo | {selectedIndex}
               </Text>
               <TouchableOpacity onPress={() => toggleGrupo(-1)}>
-                <Icon name="close" size={30} color={'black'} />
+                <Icon name="close" size={30} color={'#000000'} />
               </TouchableOpacity>
             </View>
             <View style={[styles.modalSection, {flexDirection: 'column'}]}>
@@ -1059,7 +1243,7 @@ const NewGrupo = ({navigation}) => {
                   style={{
                     width: '100%',
                     height: 100,
-                    backgroundColor: 'white',
+                    backgroundColor: '#ffffff',
                     borderWidth: 1,
                   }}>
                   <ScrollView
@@ -1087,9 +1271,9 @@ const NewGrupo = ({navigation}) => {
                             <Feather
                               name={nome.pref ? 'user-check' : 'user'}
                               size={25}
-                              color={'black'}
+                              color={'#000000'}
                             />
-                            <Text style={{fontSize: 16, color: 'black'}}>
+                            <Text style={{fontSize: 16, color: '#000000'}}>
                               {nome.nome}
                             </Text>
                           </View>
@@ -1150,12 +1334,12 @@ const NewGrupo = ({navigation}) => {
                               style={{width: 25}}
                               name={item?.pref ? 'user-check' : 'user'}
                               size={22}
-                              color={'black'}
+                              color={'#000000'}
                             />
                             <Text
                               style={{
                                 fontSize: 16,
-                                color: 'black',
+                                color: '#000000',
                                 textTransform: 'capitalize',
                               }}>
                               {item?.nome}
@@ -1233,24 +1417,28 @@ const NewGrupo = ({navigation}) => {
   };
 
   return (
-    <View styles={styles.mainContainer}>
-      <OrientationLocker orientation="PORTRAIT" />
-      <View style={styles.viewContainer}>
-        <ScrollView
-          scrollEnabled={false}
-          ref={scrollViewRef}
-          horizontal={true}
-          contentOffset={{x: offset, y: 0}}>
-          <ViewNomes />
-          <ViewGrupos />
-          <ViewPlacar />
-        </ScrollView>
+    <SafeAreaView>
+      <View styles={styles.mainContainer}>
+        <OrientationLocker orientation="PORTRAIT" />
+        <StatusBar hidden={false} />
+        <View style={styles.viewContainer}>
+          <ScrollView
+            scrollEnabled={false}
+            ref={scrollViewRef}
+            horizontal={true}
+            contentOffset={{x: offset, y: 0}}>
+            <ViewNomes />
+            <ViewGrupos />
+            <ViewPlacar />
+          </ScrollView>
+        </View>
+        <Menu />
+        <MenuUserAdd />
+        <MenuGrupo />
+        <MenuPlacar />
+        <MenuInformacoes />
       </View>
-      <Menu />
-      <MenuUserAdd />
-      <MenuGrupo />
-      <MenuPlacar />
-    </View>
+    </SafeAreaView>
   );
 };
 
@@ -1261,23 +1449,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  addNomeContainer: {
-    width: '100%',
-    paddingVertical: 10,
-    columnGap: 10,
-    flexDirection: 'row',
-    backgroundColor: 'gray',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  searchContainerTextInput: {
-    width: '90%',
-    height: 40,
-    color: 'black',
-    backgroundColor: 'white',
-    borderRadius: 15,
-    paddingLeft: 10,
   },
   viewContainer: {
     height: Math.round(height - 20),
@@ -1298,16 +1469,16 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  headerText: {
-    fontWeight: '500',
-    fontSize: 18,
-    color: Cores.textNormal,
-  },
   headerLine: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     width: '90%',
+  },
+  headerText: {
+    fontWeight: '500',
+    fontSize: 18,
+    color: Cores.textNormal,
   },
   buttonIconSquare: {
     //backgroundColor: Cores.buttonBackground,
@@ -1367,7 +1538,7 @@ const styles = StyleSheet.create({
     width: '48%',
     flexWrap: 'wrap',
     borderWidth: 1,
-    borderColor: 'gray',
+    borderColor: '#999999',
     rowGap: 4,
     paddingBottom: 8,
   },
@@ -1380,21 +1551,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 5,
   },
-  grupoHeaderText: {color: 'black', fontSize: 20},
+  grupoHeaderText: {color: '#000000', fontSize: 20},
+
   placarView: {
-    top: 95,
-    left: -116,
-    width: Math.round(height),
-    height: Math.round(width),
-    backgroundColor: 'papayawhip',
-    flexDirection: 'column',
-    transform: [{rotate: '90deg'}],
+    width: width,
+    height: height,
+    backgroundColor: '#000000',
   },
   placarHeader: {
-    backgroundColor: 'black',
+    width: height,
+    backgroundColor: '#000000',
     borderBottomWidth: 2,
-    borderBottomColor: 'white',
+    borderBottomColor: '#ffffff',
     height: 40,
+    paddingHorizontal: 40,
     justifyContent: 'space-between',
     alignItems: 'center',
     flexDirection: 'row',
@@ -1402,7 +1572,7 @@ const styles = StyleSheet.create({
   },
   modalMenu: {backgroundColor: '#000000c0'},
   modalContainer: {
-    backgroundColor: 'white',
+    backgroundColor: '#ffffff',
     justifyContent: 'center',
     alignItems: 'center',
     paddingBottom: 10,
@@ -1414,11 +1584,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     flexDirection: 'row',
-    backgroundColor: 'gray',
+    backgroundColor: '#999999',
   },
   modalHeaderText: {
     fontSize: 20,
-    color: 'black',
+    color: '#000000',
     fontWeight: '600',
   },
   modalSection: {
@@ -1427,5 +1597,28 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     flexDirection: 'row',
+  },
+  addNomeContainer: {
+    width: '100%',
+    paddingVertical: 10,
+    columnGap: 10,
+    flexDirection: 'row',
+    backgroundColor: '#999999',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  searchContainerTextInput: {
+    width: '90%',
+    height: 40,
+    color: '#000000',
+    backgroundColor: '#ffffff',
+    borderRadius: 15,
+    paddingLeft: 10,
+  },
+  buttonWithText: {
+    flexDirection: 'column',
+    justifyContent: 'center',
+    alignItems: 'center',
+    rowGap: -5,
   },
 });

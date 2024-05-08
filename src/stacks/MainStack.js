@@ -17,7 +17,7 @@ const MainStack = () => {
     <MyContextProvider>
       <NativeStack.Navigator
         screenOptions={{headerShown: false}}
-        initialRouteName="NewGrupo">
+        initialRouteName="Splash">
         <NativeStack.Group>
           <NativeStack.Screen name="Splash" component={Splash} />
           <NativeStack.Screen name="Inicio" component={Inicio} />

@@ -15,7 +15,7 @@ const Splash = ({navigation}) => {
   useEffect(() => {
     const timer = setTimeout(() => {
       // Trocar para a próxima tela após 5 segundos
-      navigation.replace('Inicio'); // Substitui a tela atual pela próxima
+      navigation.replace('NewGrupo'); // Substitui a tela atual pela próxima
     }, 5000); // 5000 milissegundos = 5 segundos
 
     // Limpando o timer ao desmontar o componente para evitar vazamentos de memória
@@ -28,7 +28,7 @@ const Splash = ({navigation}) => {
         source={require('../../assets/image/bg_oxosseEsportes.png')}
         resizeMode="cover"
         style={styles.image}>
-        <TouchableOpacity onPress={() => navigation.navigate('Inicio')}>
+        <TouchableOpacity onPress={() => navigation.navigate('NewGrupo')}>
           {/* <Text style={styles.text}>SplashScreen</Text>
           <Text style={styles.text}>Width {Math.round(width)}</Text>
           <Text style={styles.text}>Height {Math.round(height)}</Text> */}
